@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://mk-todo-a6x0.onrender.com/api';
+const API_BASE_URL = rawBaseUrl.endsWith('/api') ? rawBaseUrl.replace(/\/+$/, '') : `${rawBaseUrl.replace(/\/+$/, '')}/api`;
 
 // Get the logged-in user's email from localStorage session
 function getSessionEmail() {
@@ -12,7 +13,7 @@ function getSessionEmail() {
   return null;
 }
 
-// Generic fetch helper with timeout
+// Generic fetch helper with timeout (30s to accommodate Render free-tier cold starts)
 async function apiRequest(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
   const config = {
@@ -22,7 +23,7 @@ async function apiRequest(endpoint, options = {}) {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
     config.signal = controller.signal;
     const response = await fetch(url, config);
     clearTimeout(timeoutId);
