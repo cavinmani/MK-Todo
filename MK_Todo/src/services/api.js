@@ -248,3 +248,47 @@ export async function deletePhotoApi(photoId) {
   return res?.success ?? false;
 }
 
+// ─── Chat & Friends ─────────────────────────────────────────
+export async function searchUsersApi(query, currentUsername) {
+  const q = encodeURIComponent(query || '');
+  const u = encodeURIComponent(currentUsername || '');
+  return await apiRequest(`/chat/search?query=${q}&currentUsername=${u}`);
+}
+
+export async function sendFriendRequestApi(fromUsername, toUsername) {
+  return await apiRequest('/chat/friend-request', {
+    method: 'POST',
+    body: JSON.stringify({ fromUsername, toUsername }),
+  });
+}
+
+export async function respondFriendRequestApi(requestId, action, fromUsername, toUsername) {
+  return await apiRequest('/chat/respond-request', {
+    method: 'POST',
+    body: JSON.stringify({ requestId, action, fromUsername, toUsername }),
+  });
+}
+
+export async function getFriendRequestsApi(username) {
+  const u = encodeURIComponent(username || '');
+  return await apiRequest(`/chat/requests?username=${u}`);
+}
+
+export async function getFriendsApi(username) {
+  const u = encodeURIComponent(username || '');
+  return await apiRequest(`/chat/friends?username=${u}`);
+}
+
+export async function getChatMessagesApi(user1, user2) {
+  const u1 = encodeURIComponent(user1 || '');
+  const u2 = encodeURIComponent(user2 || '');
+  return await apiRequest(`/chat/messages?user1=${u1}&user2=${u2}`);
+}
+
+export async function sendChatMessageApi(sender, receiver, text) {
+  return await apiRequest('/chat/messages', {
+    method: 'POST',
+    body: JSON.stringify({ sender, receiver, text }),
+  });
+}
+

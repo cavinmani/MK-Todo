@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchFolders, fetchNotes, createNoteApi, updateNoteApi, deleteNoteApi } from '../../services/api';
+import Footer from './Footer';
 
 // Three dots options icon
 const ThreeDotsIcon = ({ size = 18 }) => (
@@ -576,14 +577,14 @@ export default function Folder({ folder, onBack }) {
 
           /* Cards: compact */
           .folder-note-card {
-            min-height: 220px;
-            padding: 18px;
+            min-height: 155px;
+            padding: 14px 16px;
           }
           .dashed-new-note {
-            min-height: 220px;
+            min-height: 155px;
           }
           .card-title {
-            font-size: 16px;
+            font-size: 15px;
           }
 
           /* Modals: bottom sheet style */
@@ -600,12 +601,12 @@ export default function Folder({ folder, onBack }) {
 
         /* Note Card inside folder */
         .folder-note-card {
-          border-radius: 22px;
-          padding: 24px;
+          border-radius: 18px;
+          padding: 16px 18px;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
-          min-height: 270px;
+          min-height: 165px;
           transition: transform 0.2s ease, box-shadow 0.2s ease;
           box-sizing: border-box;
           cursor: pointer;
@@ -623,7 +624,7 @@ export default function Folder({ folder, onBack }) {
         }
 
         .card-date {
-          font-size: 12px;
+          font-size: 11.5px;
           font-weight: 600;
           color: #4b5563;
         }
@@ -699,20 +700,20 @@ export default function Folder({ folder, onBack }) {
         }
 
         .card-title {
-          font-size: 17px;
+          font-size: 15px;
           font-weight: 700;
           color: #111827;
-          margin: 12px 0 10px 0;
+          margin: 8px 0 6px 0;
           line-height: 1.3;
         }
 
         .card-snippet {
-          font-size: 13px;
-          line-height: 1.55;
+          font-size: 12.5px;
+          line-height: 1.45;
           color: #374151;
           margin: 0;
           display: -webkit-box;
-          -webkit-line-clamp: 5;
+          -webkit-line-clamp: 3;
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
@@ -720,23 +721,23 @@ export default function Folder({ folder, onBack }) {
         .card-bottom-row {
           display: flex;
           align-items: center;
-          font-size: 12px;
+          font-size: 11.5px;
           font-weight: 500;
           color: #4b5563;
-          margin-top: 16px;
+          margin-top: 10px;
         }
 
         /* Dashed New Note Card */
         .dashed-new-note {
           border: 2px dashed #cbd5e1;
-          border-radius: 22px;
+          border-radius: 18px;
           background: transparent;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 12px;
-          min-height: 270px;
+          gap: 8px;
+          min-height: 165px;
           cursor: pointer;
           transition: all 0.2s ease;
           box-sizing: border-box;
@@ -749,7 +750,7 @@ export default function Folder({ folder, onBack }) {
         }
 
         .dashed-label {
-          font-size: 14px;
+          font-size: 13px;
           font-weight: 600;
           color: #111827;
         }
@@ -1040,7 +1041,7 @@ export default function Folder({ folder, onBack }) {
           onClick={() => setIsNewNoteModalOpen(true)}
           title="Create a new note in this folder"
         >
-          <PencilBadge size={28} />
+          <PencilBadge size={24} />
           <span className="dashed-label">New Note</span>
         </div>
       </div>
@@ -1494,6 +1495,9 @@ export default function Folder({ folder, onBack }) {
           </div>
         </div>
       )}
+
+      {/* ==================== FOOTER ==================== */}
+      <Footer />
     </div>
   );
 }

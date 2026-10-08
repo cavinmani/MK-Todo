@@ -13,24 +13,7 @@ import galleryIcon from '../../assets/gallery.png';
  *   onLogout      — logout
  */
 export default function FloatingNav({ activeScreen, onHome, onPhotos, onCalendar, onLogout }) {
-  const [visible, setVisible] = useState(true);
-  const [lastY, setLastY] = useState(0);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
-
-  // Hide nav on scroll down, show on scroll up
-  useEffect(() => {
-    const onScroll = () => {
-      const currentY = window.scrollY;
-      if (currentY > lastY + 10 && currentY > 80) {
-        setVisible(false);
-      } else if (currentY < lastY - 6) {
-        setVisible(true);
-      }
-      setLastY(currentY);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [lastY]);
 
   // Auto-cancel logout confirm after 3s
   useEffect(() => {
@@ -116,12 +99,7 @@ export default function FloatingNav({ activeScreen, onHome, onPhotos, onCalendar
             opacity 0.38s cubic-bezier(0.4, 0, 0.2, 1);
           animation: floatnav-rise 0.48s cubic-bezier(0.34, 1.56, 0.64, 1) both;
           user-select: none;
-        }
-
-        .floatnav-dock.hidden {
-          transform: translateX(-50%) translateY(120px);
-          opacity: 0;
-          pointer-events: none;
+          pointer-events: auto;
         }
 
         /* ── Individual nav button ── */
@@ -342,7 +320,7 @@ export default function FloatingNav({ activeScreen, onHome, onPhotos, onCalendar
       `}</style>
 
       <nav
-        className={`floatnav-dock${!visible ? ' hidden' : ''}`}
+        className="floatnav-dock"
         role="navigation"
         aria-label="Main navigation"
       >

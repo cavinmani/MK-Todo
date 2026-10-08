@@ -13,6 +13,7 @@ import eventRoutes, { seedDefaultEvents } from './routes/eventRoutes.js';
 import todoRoutes, { seedDefaultTodos } from './routes/todoRoutes.js';
 import photoRoutes from './routes/photoRoutes.js';
 import photoFolderRoutes from './routes/photoFolderRoutes.js';
+import chatRoutes, { seedDemoUsers } from './routes/chatRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -66,13 +67,14 @@ app.use('/api/events', eventRoutes);
 app.use('/api/todos', todoRoutes);
 app.use('/api/photos', photoRoutes);
 app.use('/api/photo-folders', photoFolderRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Root fallback
 app.get('/', (req, res) => {
   res.json({
     message: 'MK Todo Backend API is running.',
     healthEndpoint: '/api/health',
-    endpoints: ['/api/auth/login', '/api/folders', '/api/notes', '/api/events', '/api/todos'],
+    endpoints: ['/api/auth/login', '/api/folders', '/api/notes', '/api/events', '/api/todos', '/api/chat'],
   });
 });
 
@@ -92,6 +94,7 @@ const startServer = async () => {
       await seedDefaultNotes();
       await seedDefaultEvents();
       await seedDefaultTodos();
+      await seedDemoUsers();
     } else {
       console.warn('[MongoDB] Database connection pending. Starting server with fallback resilience.');
     }

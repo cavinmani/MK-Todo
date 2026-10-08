@@ -8,6 +8,8 @@ import {
   updateNoteApi,
   deleteNoteApi,
 } from '../../services/api';
+import ChatPanel from '../Components/ChatPanel';
+import Footer from '../Components/Footer';
 
 // Helper to get logged-in user name from session
 function getSessionUserName() {
@@ -19,6 +21,14 @@ function getSessionUserName() {
     }
   } catch (_) {}
   return 'My';
+}
+
+function getSessionUser() {
+  try {
+    const raw = localStorage.getItem('mk_session_user');
+    if (raw) return JSON.parse(raw);
+  } catch (_) {}
+  return null;
 }
 
 // Folded document icon matching the reference screenshot
@@ -370,92 +380,7 @@ export default function Home({ onNavigateToCalendar, onLogout, onOpenFolder }) {
   const displayedFolders = folders;
   const displayedNotes = notes;
 
-  // ── AI Chat State ──────────────────────────────────────────────
-  const [chatMessages, setChatMessages] = useState([
-    { role: 'assistant', text: 'Hi! I\'m your AI assistant powered by Gemini. Ask me anything — tasks, ideas, writing, code, or general questions! ✨' }
-  ]);
-  const [chatInput, setChatInput] = useState('');
-  const [chatLoading, setChatLoading] = useState(false);
-  const chatEndRef = React.useRef(null);
-
-  // Auto-scroll to latest message
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages, chatLoading]);
-
-  const sendChatMessage = async () => {
-    const text = chatInput.trim();
-    if (!text || chatLoading) return;
-    setChatInput('');
-    const userMsg = { role: 'user', text };
-    setChatMessages((prev) => [...prev, userMsg]);
-    setChatLoading(true);
-
-    try {
-      const apiKey =
-        (import.meta.env.VITE_GEMINI_API_KEY && import.meta.env.VITE_GEMINI_API_KEY !== 'YOUR_GEMINI_API_KEY_HERE')
-          ? import.meta.env.VITE_GEMINI_API_KEY
-          : (localStorage.getItem('gemini_api_key') || 'AIzaSyCekvikB_jCloGvqQWtAgfxZVERN_iXoPk');
-
-      if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE') {
-        throw new Error('API_KEY_MISSING');
-      }
-
-      // Format previous messages for Gemini API, filtering out system error bubbles
-      const historyContents = chatMessages
-        .filter((m) => !m.text.startsWith('⚠️') && !m.text.startsWith('❌'))
-        .map((m) => ({
-          role: m.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: m.text }]
-        }));
-
-      const body = {
-        contents: [
-          ...historyContents,
-          { role: 'user', parts: [{ text }] }
-        ],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
-      };
-
-      const modelsToTry = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-flash-latest'];
-      let reply = null;
-      let lastErrMsg = null;
-
-      for (const model of modelsToTry) {
-        try {
-          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-          const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-          });
-          if (res.ok) {
-            const data = await res.json();
-            reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (reply) break;
-          } else {
-            const errData = await res.json().catch(() => ({}));
-            lastErrMsg = errData?.error?.message || `HTTP ${res.status}`;
-          }
-        } catch (e) {
-          lastErrMsg = e.message;
-        }
-      }
-
-      if (!reply) {
-        throw new Error(lastErrMsg || 'Could not generate a response.');
-      }
-
-      setChatMessages((prev) => [...prev, { role: 'assistant', text: reply }]);
-    } catch (err) {
-      const errMsg = err.message === 'API_KEY_MISSING'
-        ? '⚠️ Please add your Gemini API key to the .env file as VITE_GEMINI_API_KEY.'
-        : `❌ Error: ${err.message}. Please check your connection.`;
-      setChatMessages((prev) => [...prev, { role: 'assistant', text: errMsg }]);
-    } finally {
-      setChatLoading(false);
-    }
-  };
+  const [currentUser] = useState(() => getSessionUser());
 
   return (
     <div
@@ -475,8 +400,10 @@ export default function Home({ onNavigateToCalendar, onLogout, onOpenFolder }) {
           font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
           color: #111827;
           box-sizing: border-box;
-          padding: 36px 24px 110px 48px;
+          padding: 36px 24px 80px 48px;
           -webkit-font-smoothing: antialiased;
+          display: flex;
+          flex-direction: column;
         }
 
         /* Two-column split layout */
@@ -486,7 +413,9 @@ export default function Home({ onNavigateToCalendar, onLogout, onOpenFolder }) {
           gap: 32px;
           align-items: flex-start;
           max-width: 1400px;
+          width: 100%;
           margin: 0 auto;
+          flex: 1;
         }
 
         .home-left-col {
@@ -999,21 +928,21 @@ export default function Home({ onNavigateToCalendar, onLogout, onOpenFolder }) {
 
           /* Cards: slightly less tall on mobile */
           .folder-card {
-            min-height: 140px;
-            padding: 18px 18px;
+            min-height: 110px;
+            padding: 14px 16px;
           }
           .dashed-card.folder-height {
-            min-height: 140px;
+            min-height: 110px;
           }
           .note-card {
-            min-height: 240px;
-            padding: 18px 18px;
+            min-height: 155px;
+            padding: 14px 16px;
           }
           .dashed-card.note-height {
-            min-height: 240px;
+            min-height: 155px;
           }
           .note-title {
-            font-size: 16px;
+            font-size: 15px;
           }
 
           /* Modal: edge-to-edge on mobile */
@@ -1030,12 +959,12 @@ export default function Home({ onNavigateToCalendar, onLogout, onOpenFolder }) {
 
         /* Folder Card */
         .folder-card {
-          border-radius: 22px;
-          padding: 22px 24px;
+          border-radius: 18px;
+          padding: 16px 18px;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
-          min-height: 165px;
+          min-height: 118px;
           position: relative;
           transition: transform 0.2s ease, box-shadow 0.2s ease;
           box-sizing: border-box;
@@ -1171,19 +1100,20 @@ export default function Home({ onNavigateToCalendar, onLogout, onOpenFolder }) {
         }
 
         .folder-bottom {
-          margin-top: 28px;
+          margin-top: 14px;
         }
 
         .folder-title {
-          font-size: 17px;
+          font-size: 15px;
           font-weight: 700;
           color: #111827;
-          margin: 0 0 5px 0;
+          margin: 0;
           line-height: 1.25;
+          word-break: break-word;
         }
 
         .folder-date {
-          font-size: 12px;
+          font-size: 11.5px;
           font-weight: 500;
           color: #6b7280;
           margin: 0;
@@ -1192,13 +1122,13 @@ export default function Home({ onNavigateToCalendar, onLogout, onOpenFolder }) {
         /* Dashed New Card */
         .dashed-card {
           border: 2px dashed #cbd5e1;
-          border-radius: 22px;
+          border-radius: 18px;
           background: transparent;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 12px;
+          gap: 8px;
           cursor: pointer;
           transition: all 0.2s ease;
           box-sizing: border-box;
@@ -1212,27 +1142,27 @@ export default function Home({ onNavigateToCalendar, onLogout, onOpenFolder }) {
         }
 
         .dashed-card.folder-height {
-          min-height: 165px;
+          min-height: 118px;
         }
 
         .dashed-card.note-height {
-          min-height: 290px;
+          min-height: 165px;
         }
 
         .dashed-label {
-          font-size: 14px;
+          font-size: 13px;
           font-weight: 600;
           color: #111827;
         }
 
         /* Note Card */
         .note-card {
-          border-radius: 22px;
-          padding: 24px;
+          border-radius: 18px;
+          padding: 16px 18px;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
-          min-height: 290px;
+          min-height: 165px;
           transition: transform 0.2s ease, box-shadow 0.2s ease;
           box-sizing: border-box;
           cursor: pointer;
@@ -1250,33 +1180,33 @@ export default function Home({ onNavigateToCalendar, onLogout, onOpenFolder }) {
         }
 
         .note-date {
-          font-size: 12px;
+          font-size: 11.5px;
           font-weight: 500;
           color: #4b5563;
           margin: 0;
         }
 
         .note-main-content {
-          margin: 14px 0;
+          margin: 8px 0;
           flex-grow: 1;
         }
 
         .note-title {
-          font-size: 18px;
+          font-size: 15px;
           font-weight: 700;
           color: #111827;
-          margin: 0 0 12px 0;
+          margin: 0 0 6px 0;
           line-height: 1.25;
         }
 
         .note-snippet {
-          font-size: 13px;
-          line-height: 1.55;
+          font-size: 12.5px;
+          line-height: 1.45;
           color: #374151;
           margin: 0;
           white-space: pre-line;
           display: -webkit-box;
-          -webkit-line-clamp: 6;
+          -webkit-line-clamp: 3;
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
@@ -1284,10 +1214,10 @@ export default function Home({ onNavigateToCalendar, onLogout, onOpenFolder }) {
         .note-bottom-row {
           display: flex;
           align-items: center;
-          font-size: 12px;
+          font-size: 11.5px;
           font-weight: 500;
           color: #4b5563;
-          margin-top: 16px;
+          margin-top: 10px;
         }
 
         /* Modal Styles */
@@ -1415,18 +1345,18 @@ export default function Home({ onNavigateToCalendar, onLogout, onOpenFolder }) {
         }
       `}</style>
 
-      {/* Top Application Bar */}
-      <header className="home-top-nav">
-        <div className="home-brand-title">
-          <span>{getSessionUserName()}'s TODO</span>
-          <span className="home-brand-badge">Workspace</span>
-        </div>
-      </header>
-
-
       <main className="home-split-layout">
         <div className="home-left-col">
+          {/* Top Application Bar */}
+          <header className="home-top-nav">
+            <div className="home-brand-title">
+              <span>{getSessionUserName()}'s TODO</span>
+              <span className="home-brand-badge">Workspace</span>
+            </div>
+          </header>
+
           <div className="home-content-container">
+
         {/* ================= SECTION 1: RECENT FOLDERS ================= */}
         <section className="section-block">
           <h2 className="section-title">Recent Folders</h2>
@@ -1447,7 +1377,7 @@ export default function Home({ onNavigateToCalendar, onLogout, onOpenFolder }) {
                   <DocumentFoldedIcon
                     color={folder.iconColor}
                     flapColor={folder.flapColor}
-                    size={36}
+                    size={26}
                   />
                   <div style={{ position: 'relative' }}>
                     <button
@@ -1487,7 +1417,6 @@ export default function Home({ onNavigateToCalendar, onLogout, onOpenFolder }) {
 
                 <div className="folder-bottom">
                   <h3 className="folder-title">{folder.title}</h3>
-                  <p className="folder-date">{folder.date}</p>
                 </div>
               </div>
             ))}
@@ -1498,7 +1427,7 @@ export default function Home({ onNavigateToCalendar, onLogout, onOpenFolder }) {
               onClick={() => setIsFolderModalOpen(true)}
               title="Create new folder"
             >
-              <DocumentFoldedIcon color="#1e293b" flapColor="#0f172a" size={32} />
+              <DocumentFoldedIcon color="#1e293b" flapColor="#0f172a" size={24} />
               <span className="dashed-label">New folder</span>
             </div>
           </div>
@@ -1625,7 +1554,7 @@ export default function Home({ onNavigateToCalendar, onLogout, onOpenFolder }) {
               onClick={() => setIsNoteModalOpen(true)}
               title="Create new note"
             >
-              <PencilBadge size={28} isDashed={true} />
+              <PencilBadge size={24} isDashed={true} />
               <span className="dashed-label">New Note</span>
             </div>
           </div>
@@ -2119,77 +2048,12 @@ export default function Home({ onNavigateToCalendar, onLogout, onOpenFolder }) {
         </div>
       )}
 
-        {/* ==================== AI CHAT PANEL ==================== */}
-        <aside className="ai-chat-panel">
-          {/* Header */}
-          <div className="ai-chat-header">
-            <div className="ai-chat-logo-wrap">
-              <img src="/gemini.png" alt="Gemini" className="ai-chat-logo-img" />
-            </div>
-            <button
-              type="button"
-              className="ai-chat-clear-btn"
-              onClick={() => setChatMessages([
-                { role: 'assistant', text: 'Chat cleared! Ask me anything ✨' }
-              ])}
-              title="Clear chat"
-            >🗑</button>
-          </div>
-
-          {/* Messages */}
-          <div className="ai-chat-messages">
-            {chatMessages.map((msg, idx) => (
-              <div key={idx} className={`ai-msg ${msg.role}`}>
-                <div className="ai-msg-bubble">{msg.text}</div>
-              </div>
-            ))}
-            {chatLoading && (
-              <div className="ai-msg assistant">
-                <div className="ai-typing">
-                  <span /><span /><span />
-                </div>
-              </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
-
-          {/* Input */}
-          <div className="ai-chat-input-area">
-            <div className="ai-chat-input-row">
-              <textarea
-                className="ai-chat-textarea"
-                placeholder="Ask me anything..."
-                rows={1}
-                value={chatInput}
-                onChange={(e) => {
-                  setChatInput(e.target.value);
-                  e.target.style.height = 'auto';
-                  e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendChatMessage();
-                  }
-                }}
-              />
-              <button
-                type="button"
-                className="ai-chat-send-btn"
-                onClick={sendChatMessage}
-                disabled={chatLoading || !chatInput.trim()}
-                title="Send message"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13" />
-                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                </svg>
-              </button>
-            </div>
-            <p className="ai-chat-hint">Press Enter to send · Shift+Enter for new line</p>
-          </div>
-        </aside>
+        {/* ==================== FRIENDS & CHAT PANEL ==================== */}
+        <ChatPanel currentUser={currentUser} />
       </main>{/* home-split-layout */}
+
+      {/* ==================== FOOTER ==================== */}
+      <Footer />
     </div>
   );
 }
